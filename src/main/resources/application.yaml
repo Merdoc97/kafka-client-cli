@@ -1,0 +1,46 @@
+spring:
+  main:
+    banner-mode: off
+  output:
+    ansi:
+      enabled: always
+
+  kafka:
+    consumer:
+      properties:
+        sasl:
+          mechanism: PLAIN
+        security:
+          protocol: SASL_PLAINTEXT
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    bootstrap-servers: localhost:9092
+    producer:
+      client-id: test-producer
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      retries: 2
+      acks: all
+      properties:
+        sasl:
+          mechanism: PLAIN
+        security:
+          protocol: SASL_PLAINTEXT
+    jaas:
+      enabled: true
+      login-module: org.apache.kafka.common.security.plain.PlainLoginModule
+      options:
+        username: admin
+        password: admin-secret
+logging:
+  level:
+    root: warn
+    com.github.kafkaclientcli: warn
+    com.github.kafkaclientcli.api: info
+    com.github.kafkaclientcli.service: info
+    com.github.kafkaclientcli.util: info
+  pattern:
+    console: "%clr(%m){faint}%n"
+
