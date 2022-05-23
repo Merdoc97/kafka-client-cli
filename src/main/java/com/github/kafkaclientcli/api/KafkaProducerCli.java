@@ -34,10 +34,14 @@ public class KafkaProducerCli implements Runnable {
     @CommandLine.Option(names = {"-t", "--topic"}, required = true, description = "topic name")
     private String topic;
 
+    @CommandLine.Option(names = {"-k", "--key"}, required = false, description = "key for kafka template")
+    private String key;
+
     @Override
     public void run() {
-        var producerRecord = new ProducerRecord<String, Object>(topic, validateFormat());
+        var producerRecord = new ProducerRecord<String, Object>(topic, key, validateFormat());
         addHeaders(producerRecord.headers());
+
         kafkaTemplate.send(producerRecord);
     }
 

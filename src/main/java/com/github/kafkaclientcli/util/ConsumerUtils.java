@@ -29,7 +29,6 @@ public class ConsumerUtils {
         ConsumerRecords<?, ?> records = consumer.poll(Duration.ofMillis(timeout));
         ConsumerRecord<?, ?> record = records.iterator().next();
         if (record != null) {
-            consumer.commitSync();
             log.info("-----------body-------------");
             log.info(record.value().toString());
             log.info("-----------headers-------------");
@@ -39,29 +38,29 @@ public class ConsumerUtils {
 
     @SneakyThrows
     public void consumeFromTo(Consumer<?, ?> consumer, TopicPartition topicPart,
-                              Long from, Long to, ObjectMapper mapper, long timeoutMs) {
-        if (from == null || to == null) {
+                              Long lastNumberOfMessages, ObjectMapper mapper, long timeoutMs) {
+        if (lastNumberOfMessages == null) {
             log.error("from and to is required if last not set");
             System.exit(-1);
         }
+        consumer.seekToEnd(Collections.singletonList(topicPart));
+        if (consumer.position(topicPart) > 0L) {
+            consumer.seek(topicPart, consumer.position(topicPart) - lastNumberOfMessages);
+        }
 
-        consumer.seek(topicPart, from);
         var records = consumer.poll(Duration.ofMillis(timeoutMs));
         var iterator = records.iterator();
-        consumer.commitAsync();
 
-        int counter = 0;
-        do {
+        while (iterator.hasNext()) {
             log.info("----------------begin-------------------");
             var record = iterator.next();
             log.info("-----------body-------------");
             log.info(record.value().toString());
             log.info("-----------headers-------------");
             log.info(mapper.writeValueAsString(convertHeaders(record.headers())));
-            ++counter;
             log.info("----------------end----------------------");
         }
-        while (iterator.hasNext() && counter != (1 + from - to));
+
     }
 
     private Map<String, String> convertHeaders(Headers headers) {

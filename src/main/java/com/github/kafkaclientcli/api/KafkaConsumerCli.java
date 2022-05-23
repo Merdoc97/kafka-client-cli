@@ -28,12 +28,12 @@ public class KafkaConsumerCli implements Runnable {
     private boolean last;
     @CommandLine.Option(names = {"-g", "--group-id"}, required = true, description = "group_id")
     private String groupId;
-    @CommandLine.Option(names = {"-f", "--from"})
-    private Long from;
-    @CommandLine.Option(names = {"-to", "--to"})
-    private Long to;
+    @CommandLine.Option(names = {"-n", "--number"}, description = "number of last messages")
+    private Long lastNumberMessages;
     @CommandLine.Option(names = {"--timeout"}, defaultValue = "1000")
     private Long timeOut;
+    @CommandLine.Option(names = {"-p", "--partition"}, defaultValue = "0")
+    private int partition;
 
 
     @SneakyThrows
@@ -41,13 +41,13 @@ public class KafkaConsumerCli implements Runnable {
     public void run() {
         var consumer = consumerFactory.createConsumer(groupId, groupId);
         mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
-        TopicPartition topicPart = new TopicPartition(topic, 0);
+        TopicPartition topicPart = new TopicPartition(topic, partition);
         consumer.assign(Collections.singletonList(topicPart));
         try {
             if (last) {
                 ConsumerUtils.getLast(consumer, topicPart, timeOut, mapper);
             } else {
-                ConsumerUtils.consumeFromTo(consumer, topicPart, from, to, mapper, timeOut);
+                ConsumerUtils.consumeFromTo(consumer, topicPart, lastNumberMessages, mapper, timeOut);
             }
         } finally {
             consumer.close();
